@@ -87,7 +87,7 @@ Comprehensive logging sistem:
 
 1. **Clone/Navigate to Repository**
 ```bash
-cd /path/to/jmc-project
+cd https://github.com/pieter-28/jmc-test-app.git
 ```
 
 2. **Copy Environment File**
