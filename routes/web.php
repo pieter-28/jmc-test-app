@@ -9,6 +9,7 @@ use App\Http\Controllers\TransportAllowanceController;
 use App\Http\Controllers\TransportAllowanceSettingController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\Api\LocationController;
 
 // Redirect to login or dashboard
 Route::get('/', function () {
@@ -25,6 +26,10 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
+
+// Location APIs (for cascading selects) - No auth required, public data
+Route::get('/api/districts/{province}', [LocationController::class, 'getDistricts']);
+Route::get('/api/sub-districts/{district}', [LocationController::class, 'getSubDistricts']);
 
 // Authenticated Routes
 Route::middleware('auth', 'check.if.user.is.active')->group(function () {
@@ -112,4 +117,8 @@ Route::middleware('auth', 'check.if.user.is.active')->group(function () {
     Route::middleware('permission:activity-log.view')->group(function () {
         Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
     });
+
+    // Location APIs (for cascading selects)
+    Route::get('/api/districts/{province}', [LocationController::class, 'getDistricts']);
+    Route::get('/api/sub-districts/{district}', [LocationController::class, 'getSubDistricts']);
 });

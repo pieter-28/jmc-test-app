@@ -7,7 +7,6 @@ use App\Models\Employee;
 use App\Models\Position;
 use App\Models\Department;
 use App\Models\Province;
-use App\Models\SubDistrict;
 use App\Models\ActivityLog;
 use Illuminate\Support\Facades\Auth;
 
@@ -66,13 +65,17 @@ class EmployeeController extends Controller
     /**
      * Show create employee form.
      */
-    public function create()
+    public function create(Request $request)
     {
         $positions = Position::all();
         $departments = Department::all();
         $provinces = Province::all();
 
-        return view('employees.create', compact('positions', 'departments', 'provinces'));
+        return view('employees.create', [
+            'positions' => $positions,
+            'departments' => $departments,
+            'provinces' => $provinces
+        ]);
     }
 
     /**

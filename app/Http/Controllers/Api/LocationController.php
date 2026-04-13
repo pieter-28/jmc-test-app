@@ -28,4 +28,51 @@ class LocationController extends Controller
 
         return response()->json($subDistricts);
     }
+
+    /**
+     * Search sub-districts by name (autocomplete).
+     */
+    public function searchSubDistricts(\Illuminate\Http\Request $request)
+    {
+        $query = $request->input('q', '');
+
+        if (strlen($query) < 3) {
+            return response()->json([]);
+        }
+
+        $subDistricts = SubDistrict::where('name', 'like', "%$query%")
+            ->with('district.province')
+            ->select('id', 'name', 'district_id')
+            ->limit(20)
+            ->get()
+            ->map(function ($subDistrict) {
+                return [
+                    'id' => $subDistrict->id,
+                    'text' => $subDistrict->name,
+                ];
+            });
+
+        return response()->json($subDistricts);
+    }
+
+    /**
+     * Get district and province information from sub-district.
+     */
+    public function getLocationFromSubDistrict($id)
+    {
+        $subDistrict = SubDistrict::with('district.province')->find($id);
+
+        if (!$subDistrict) {
+            return response()->json(['error' => 'Sub-district not found'], 404);
+        }
+
+        return response()->json([
+            'sub_district_id' => $subDistrict->id,
+            'sub_district_name' => $subDistrict->name,
+            'district_id' => $subDistrict->district->id,
+            'district_name' => $subDistrict->district->name,
+            'province_id' => $subDistrict->district->province->id,
+            'province_name' => $subDistrict->district->province->name,
+        ]);
+    }
 }

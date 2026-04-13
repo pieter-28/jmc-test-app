@@ -1,8 +1,3 @@
-<form method="POST" action="{{ isset($employee) ? route('employees.update', $employee) : route('employees.store') }}">
-    @csrf
-    @if (isset($employee))
-        @method('PUT')
-    @endif
 
     <div class="row">
         <!-- NIP -->
@@ -74,7 +69,7 @@
     <h6 class="mb-3 mt-4">Alamat</h6>
 
     <div class="row">
-        <!-- Provinsi -->
+        <!-- Provinsi (Province) -->
         <div class="col-md-4 mb-3">
             <label for="province_id" class="form-label">Provinsi</label>
             <select class="form-select @error('province_id') is-invalid @enderror" id="province_id" name="province_id"
@@ -87,31 +82,45 @@
                 @endforeach
             </select>
             @error('province_id')
-                <span class="invalid-feedback">{{ $message }}</span>
+                <span class="invalid-feedback d-block">{{ $message }}</span>
             @enderror
         </div>
 
-        <!-- Kabupaten -->
+        <!-- Kabupaten (District) -->
         <div class="col-md-4 mb-3">
-            <label for="district_id" class="form-label">Kabupaten</label>
+            <label for="district_id" class="form-label">Kabupaten / Kota</label>
             <select class="form-select @error('district_id') is-invalid @enderror" id="district_id" name="district_id"
                 required>
-                <option value="">Pilih Kabupaten</option>
+                <option value="">Pilih Kabupaten / Kota</option>
+                @if (isset($employee) && $employee->district_id)
+                    @foreach ($employee->district->province->districts as $district)
+                        <option value="{{ $district->id }}" @selected($employee->district_id == $district->id)>
+                            {{ $district->name }}
+                        </option>
+                    @endforeach
+                @endif
             </select>
             @error('district_id')
-                <span class="invalid-feedback">{{ $message }}</span>
+                <span class="invalid-feedback d-block">{{ $message }}</span>
             @enderror
         </div>
 
-        <!-- Kecamatan -->
+        <!-- Kecamatan (SubDistrict) -->
         <div class="col-md-4 mb-3">
             <label for="sub_district_id" class="form-label">Kecamatan</label>
             <select class="form-select @error('sub_district_id') is-invalid @enderror" id="sub_district_id"
                 name="sub_district_id" required>
                 <option value="">Pilih Kecamatan</option>
+                @if (isset($employee) && $employee->sub_district_id)
+                    @foreach ($employee->district->subDistricts as $subDistrict)
+                        <option value="{{ $subDistrict->id }}" @selected($employee->sub_district_id == $subDistrict->id)>
+                            {{ $subDistrict->name }}
+                        </option>
+                    @endforeach
+                @endif
             </select>
             @error('sub_district_id')
-                <span class="invalid-feedback">{{ $message }}</span>
+                <span class="invalid-feedback d-block">{{ $message }}</span>
             @enderror
         </div>
     </div>
@@ -232,15 +241,7 @@
     </button>
 
     <!-- Submit Buttons -->
-    <div class="mt-4">
-        <button type="submit" class="btn btn-primary">
-            <i class="fas fa-save"></i> {{ isset($employee) ? 'Simpan Perubahan' : 'Simpan' }}
-        </button>
-        <a href="{{ route('employees.index') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Kembali
-        </a>
-    </div>
-</form>
+
 
 <script>
     let educationCount = 0;
@@ -277,54 +278,106 @@
         });
     });
 
-    // Location cascade
-    document.getElementById('province_id').addEventListener('change', function() {
-        const provinceId = this.value;
-        const districtSelect = document.getElementById('district_id');
-        const subDistrictSelect = document.getElementById('sub_district_id');
+    // Location cascade - Provinsi → Kabupaten → Kecamatan
+    const provinceSelect = document.getElementById('province_id');
+    const districtSelect = document.getElementById('district_id');
+    const subDistrictSelect = document.getElementById('sub_district_id');
 
-        districtSelect.innerHTML = '<option value="">Pilih Kabupaten</option>';
+    // Get CSRF token for API requests
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+    // Handle Provinsi change
+    provinceSelect.addEventListener('change', function() {
+        const provinceId = this.value;
+
+        // Clear Kabupaten and Kecamatan
+        districtSelect.innerHTML = '<option value="">Pilih Kabupaten / Kota</option>';
         subDistrictSelect.innerHTML = '<option value="">Pilih Kecamatan</option>';
 
         if (provinceId) {
-            fetch(`/api/districts?province_id=${provinceId}`)
-                .then(response => response.json())
+            fetch(`/api/districts/${provinceId}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response: ' + response.status);
+                    }
+                    return response.json();
+                })
                 .then(data => {
-                    data.forEach(district => {
-                        const option = document.createElement('option');
-                        option.value = district.id;
-                        option.text = district.name;
-                        districtSelect.appendChild(option);
-                    });
+                    if (Array.isArray(data)) {
+                        data.forEach(district => {
+                            const option = document.createElement('option');
+                            option.value = district.id;
+                            option.textContent = district.name;
+                            districtSelect.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching districts:', error);
+                    districtSelect.innerHTML = '<option value="">Gagal memuat kabupaten</option>';
                 });
         }
     });
 
-    document.getElementById('district_id').addEventListener('change', function() {
+    // Handle Kabupaten change
+    districtSelect.addEventListener('change', function() {
         const districtId = this.value;
-        const subDistrictSelect = document.getElementById('sub_district_id');
 
+        // Clear Kecamatan
         subDistrictSelect.innerHTML = '<option value="">Pilih Kecamatan</option>';
 
         if (districtId) {
-            fetch(`/api/sub-districts?district_id=${districtId}`)
-                .then(response => response.json())
+            fetch(`/api/sub-districts/${districtId}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response: ' + response.status);
+                    }
+                    return response.json();
+                })
                 .then(data => {
-                    data.forEach(subDistrict => {
-                        const option = document.createElement('option');
-                        option.value = subDistrict.id;
-                        option.text = subDistrict.name;
-                        subDistrictSelect.appendChild(option);
-                    });
+                    if (Array.isArray(data)) {
+                        data.forEach(subDistrict => {
+                            const option = document.createElement('option');
+                            option.value = subDistrict.id;
+                            option.textContent = subDistrict.name;
+                            subDistrictSelect.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching sub-districts:', error);
+                    subDistrictSelect.innerHTML = '<option value="">Gagal memuat kecamatan</option>';
                 });
         }
     });
 
     // Trigger cascade on page load if editing
     @if (isset($employee) && $employee->province_id)
-        document.getElementById('province_id').dispatchEvent(new Event('change'));
-        setTimeout(() => {
-            document.getElementById('district_id').dispatchEvent(new Event('change'));
-        }, 500);
+        document.addEventListener('DOMContentLoaded', function() {
+            // Trigger province change to load districts
+            provinceSelect.value = '{{ $employee->province_id }}';
+            provinceSelect.dispatchEvent(new Event('change'));
+
+            // After districts are loaded, select the district and load sub-districts
+            setTimeout(() => {
+                districtSelect.value = '{{ $employee->district_id }}';
+                districtSelect.dispatchEvent(new Event('change'));
+
+                // After sub-districts are loaded, select the sub-district
+                setTimeout(() => {
+                    subDistrictSelect.value = '{{ $employee->sub_district_id }}';
+                }, 300);
+            }, 300);
+        });
     @endif
 </script>

@@ -11,6 +11,8 @@ use App\Http\Controllers\Api\DepartmentApiController;
 Route::middleware('auth')->group(function () {
     Route::get('/districts/{province}', [LocationController::class, 'getDistricts']);
     Route::get('/sub-districts/{district}', [LocationController::class, 'getSubDistricts']);
+    Route::get('/search-sub-districts', [LocationController::class, 'searchSubDistricts']);
+    Route::get('/location-from-sub-district/{id}', [LocationController::class, 'getLocationFromSubDistrict']);
 });
 
 Route::middleware('auth:sanctum')->group(function () {
