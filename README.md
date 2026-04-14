@@ -47,6 +47,7 @@ Mendukung operasi penuh untuk integrasi:
 - **Employee API**: CRUD (GET, POST, PUT, DELETE)
 - **Location API**: Get Data Wilayah
 - **Auth**: Token-based authentication menggunakan Laravel Sanctum
+👉 **[DOKUMENTASI_API.md](./DOKUMENTASI_API.md)**
 
 ### 6. Log Aktivitas
 - Mencatat setiap login dan logout
