@@ -28,6 +28,6 @@ class CheckPermission
             }
         }
 
-        abort(403, 'Unauthorized action.');
+        return redirect()->route('dashboard')->with('error', 'Anda tidak memiliki hak akses untuk halaman tersebut.');
     }
 }

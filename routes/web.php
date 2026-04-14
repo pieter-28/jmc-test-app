@@ -1,15 +1,15 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Auth\AuthController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\EmployeeController;
-use App\Http\Controllers\TransportAllowanceController;
-use App\Http\Controllers\TransportAllowanceSettingController;
-use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\Api\LocationController;
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\TransportAllowanceController;
+use App\Http\Controllers\TransportAllowanceSettingController;
+use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\Route;
 
 // Redirect to login or dashboard
 Route::get('/', function () {
@@ -26,10 +26,6 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
-
-// Location APIs (for cascading selects) - No auth required, public data
-Route::get('/api/districts/{province}', [LocationController::class, 'getDistricts']);
-Route::get('/api/sub-districts/{district}', [LocationController::class, 'getSubDistricts']);
 
 // Authenticated Routes
 Route::middleware('auth', 'check.if.user.is.active')->group(function () {
@@ -73,16 +69,24 @@ Route::middleware('auth', 'check.if.user.is.active')->group(function () {
     // Employee Management
     Route::middleware('permission:employee.view')->group(function () {
         Route::get('/employees', [EmployeeController::class, 'index'])->name('employees.index');
-        Route::get('/employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
+        Route::get('/employees/export-excel', [EmployeeController::class, 'exportExcel'])->name('employees.export-excel');
+        Route::get('/employees/export-pdf', [EmployeeController::class, 'exportPdf'])->name('employees.export-pdf');
     });
+
     Route::middleware('permission:employee.create')->group(function () {
         Route::get('/employees/create', [EmployeeController::class, 'create'])->name('employees.create');
         Route::post('/employees', [EmployeeController::class, 'store'])->name('employees.store');
     });
+
+    Route::middleware('permission:employee.view')->group(function () {
+        Route::get('/employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
+    });
+
     Route::middleware('permission:employee.edit')->group(function () {
         Route::get('/employees/{employee}/edit', [EmployeeController::class, 'edit'])->name('employees.edit');
         Route::put('/employees/{employee}', [EmployeeController::class, 'update'])->name('employees.update');
     });
+
     Route::middleware('permission:employee.delete')->group(function () {
         Route::delete('/employees/{employee}', [EmployeeController::class, 'destroy'])->name('employees.destroy');
     });
@@ -113,12 +117,14 @@ Route::middleware('auth', 'check.if.user.is.active')->group(function () {
         Route::post('/transport-settings', [TransportAllowanceSettingController::class, 'store'])->name('transport-settings.store');
     });
 
+    // Location APIs (for cascading selects)
+    Route::get('/api/districts/{province}', [LocationController::class, 'getDistricts']);
+    Route::get('/api/sub-districts/{district}', [LocationController::class, 'getSubDistricts']);
+    Route::get('/api/search-sub-districts', [LocationController::class, 'searchSubDistricts']);
+    Route::get('/api/location-from-sub-district/{id}', [LocationController::class, 'getLocationFromSubDistrict']);
+
     // Activity Logs
     Route::middleware('permission:activity-log.view')->group(function () {
         Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
     });
-
-    // Location APIs (for cascading selects)
-    Route::get('/api/districts/{province}', [LocationController::class, 'getDistricts']);
-    Route::get('/api/sub-districts/{district}', [LocationController::class, 'getSubDistricts']);
 });

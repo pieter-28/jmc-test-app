@@ -63,11 +63,33 @@ class User extends Authenticatable
      */
     public function hasPermission($permissionSlug)
     {
-        if (!$this->role) {
+        // If there's no role_id, no permissions
+        if (!$this->role_id) {
             return false;
         }
 
-        return $this->role->permissions()->where('slug', $permissionSlug)->exists();
+        // 1. Bypass by ID (usually 1 is superadmin)
+        if ($this->role_id == 1) {
+            return true;
+        }
+
+        // 2. Try to get role using relationship or direct query
+        $role = $this->role;
+        if (!$role) {
+            $role = \App\Models\Role::find($this->role_id);
+        }
+
+        if (!$role) {
+            return false;
+        }
+
+        // 3. Bypass by slug
+        if ($role->slug === 'superadmin') {
+            return true;
+        }
+
+        // 4. Standard permission check
+        return $role->permissions()->where('slug', $permissionSlug)->exists();
     }
 
     /**
@@ -77,6 +99,10 @@ class User extends Authenticatable
     {
         if (!$this->role) {
             return false;
+        }
+
+        if ($this->role->slug === 'superadmin') {
+            return true;
         }
 
         return $this->role->permissions()->whereIn('slug', $permissionSlugs)->exists();
@@ -89,6 +115,10 @@ class User extends Authenticatable
     {
         if (!$this->role) {
             return false;
+        }
+
+        if ($this->role->slug === 'superadmin') {
+            return true;
         }
 
         $count = $this->role->permissions()->whereIn('slug', $permissionSlugs)->count();

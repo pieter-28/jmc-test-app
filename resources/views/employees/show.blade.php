@@ -23,16 +23,16 @@
                     <h6 class="mb-3">Informasi Pribadi</h6>
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <p><strong>NIP:</strong> {{ $employee->nip }}</p>
-                            <p><strong>Nama:</strong> {{ $employee->name }}</p>
-                            <p><strong>Email:</strong> {{ $employee->email }}</p>
-                            <p><strong>Nomor Telepon:</strong> {{ $employee->phone }}</p>
+                            <p><strong>NIP:</strong> {{ $employee->nip ?? '' }}</p>
+                            <p><strong>Nama:</strong> {{ $employee->name ?? '' }}</p>
+                            <p><strong>Email:</strong> {{ $employee->email ?? '' }}</p>
+                            <p><strong>Nomor Telepon:</strong> {{ $employee->phone ?? '' }}</p>
                         </div>
                         <div class="col-md-6">
                             <p><strong>Tempat Lahir:</strong> {{ $employee->place_of_birth }}</p>
                             <p><strong>Tanggal Lahir:</strong> {{ $employee->date_of_birth->format('d M Y') }}</p>
-                            <p><strong>Status Kawin:</strong> {{ $employee->marital_status }}</p>
-                            <p><strong>Jumlah Anak:</strong> {{ $employee->number_of_children }}</p>
+                            <p><strong>Status Kawin:</strong> {{ $employee->marital_status ?? '' }}</p>
+                            <p><strong>Jumlah Anak:</strong> {{ $employee->number_of_children ?? '' }}</p>
                         </div>
                     </div>
 
@@ -52,9 +52,9 @@
                     <h6 class="mb-3">Informasi Pekerjaan</h6>
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <p><strong>Jabatan:</strong> {{ $employee->position->name }}</p>
-                            <p><strong>Departemen:</strong> {{ $employee->department->name }}</p>
-                            <p><strong>Tipe Pegawai:</strong> {{ ucfirst($employee->employment_type) }}</p>
+                            <p><strong>Jabatan:</strong> {{ $employee->position->name ?? '' }}</p>
+                            <p><strong>Departemen:</strong> {{ $employee->department->name ?? '' }}</p>
+                            <p><strong>Tipe Pegawai:</strong> {{ ucfirst($employee->employment_type ?? '') }}</p>
                         </div>
                         <div class="col-md-6">
                             <p><strong>Tanggal Masuk:</strong> {{ $employee->start_date->format('d M Y') }}</p>
@@ -81,10 +81,10 @@
                             <tbody>
                                 @foreach ($employee->education as $edu)
                                     <tr>
-                                        <td>{{ $edu->level }}</td>
-                                        <td>{{ $edu->institution }}</td>
-                                        <td>{{ $edu->field_of_study }}</td>
-                                        <td>{{ $edu->graduation_year }}</td>
+                                        <td>{{ $edu->level ?? '' }}</td>
+                                        <td>{{ $edu->institution ?? '' }}</td>
+                                        <td>{{ $edu->field_of_study ?? '' }}</td>
+                                        <td>{{ $edu->graduation_year ?? '' }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>

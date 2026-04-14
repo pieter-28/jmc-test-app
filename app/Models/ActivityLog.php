@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ActivityLog extends Model
 {
-    protected $fillable = ['user_id', 'action', 'module', 'description', 'ip_address', 'user_agent'];
+    protected $fillable = ['user_id', 'action', 'module', 'description', 'ip_address', 'user_agent', 'created_at', 'updated_at'];
 
     public $timestamps = false;
 

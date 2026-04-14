@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Exports\EmployeesExport;
+use App\Models\ActivityLog;
+use App\Models\Department;
 use App\Models\Employee;
 use App\Models\Position;
-use App\Models\Department;
 use App\Models\Province;
-use App\Models\ActivityLog;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
 
 class EmployeeController extends Controller
 {
@@ -17,7 +20,7 @@ class EmployeeController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Employee::query();
+        $query = Employee::with('position', 'department', 'subDistrict', 'district', 'province');
 
         // Search
         if ($request->filled('search')) {
@@ -74,7 +77,7 @@ class EmployeeController extends Controller
         return view('employees.create', [
             'positions' => $positions,
             'departments' => $departments,
-            'provinces' => $provinces
+            'provinces' => $provinces,
         ]);
     }
 
@@ -106,7 +109,7 @@ class EmployeeController extends Controller
         $employee = Employee::create($validated);
 
         // Add education history
-        if (!empty($validated['education'])) {
+        if (! empty($validated['education'])) {
             foreach ($validated['education'] as $edu) {
                 $employee->education()->create($edu);
             }
@@ -145,9 +148,9 @@ class EmployeeController extends Controller
     public function update(Request $request, Employee $employee)
     {
         $validated = $request->validate([
-            'nip' => 'required|string|min:8|unique:employees,nip,' . $employee->id,
+            'nip' => 'required|string|min:8|unique:employees,nip,'.$employee->id,
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:employees,email,' . $employee->id,
+            'email' => 'required|email|unique:employees,email,'.$employee->id,
             'phone' => 'required|string',
             'place_of_birth' => 'required|string',
             'province_id' => 'required|exists:provinces,id',
@@ -161,16 +164,22 @@ class EmployeeController extends Controller
             'employment_type' => 'required|in:tetap,kontrak,magang',
             'position_id' => 'required|exists:positions,id',
             'department_id' => 'required|exists:departments,id',
+            'is_active' => 'nullable|boolean',
             'education' => 'nullable|array',
         ]);
 
-        $employee->update($validated);
+        $data = $validated;
+        $data['is_active'] = $request->has('is_active');
+
+        $employee->update($data);
 
         // Update education history
-        if (!empty($validated['education'])) {
+        if ($request->has('education')) {
             $employee->education()->delete();
-            foreach ($validated['education'] as $edu) {
-                $employee->education()->create($edu);
+            foreach ($request->input('education', []) as $edu) {
+                if (! empty($edu['level']) && ! empty($edu['institution'])) {
+                    $employee->education()->create($edu);
+                }
             }
         }
 
@@ -190,5 +199,28 @@ class EmployeeController extends Controller
         ActivityLog::log(Auth::id(), 'delete', 'Employee', "Deleted employee: {$name}");
 
         return redirect()->route('employees.index')->with('success', 'Pegawai berhasil dihapus');
+    }
+
+    /**
+     * Export data to Excel.
+     */
+    public function exportExcel()
+    {
+        ActivityLog::log(Auth::id(), 'export', 'Employee', 'Exported employee data to Excel');
+
+        return Excel::download(new EmployeesExport, 'daftar-pegawai-'.date('Y-m-d').'.xlsx');
+    }
+
+    /**
+     * Export data to PDF.
+     */
+    public function exportPdf()
+    {
+        $employees = Employee::with(['position', 'department'])->get();
+        ActivityLog::log(Auth::id(), 'export', 'Employee', 'Exported employee data to PDF');
+
+        $pdf = Pdf::loadView('employees.pdf', compact('employees'));
+
+        return $pdf->stream('daftar-pegawai-'.date('Y-m-d').'.pdf');
     }
 }

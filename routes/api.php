@@ -15,7 +15,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/location-from-sub-district/{id}', [LocationController::class, 'getLocationFromSubDistrict']);
 });
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:sanctum')->name('api.')->group(function () {
     // Employee API
     Route::apiResource('employees', EmployeeApiController::class);
 

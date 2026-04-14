@@ -6,9 +6,17 @@
             <div class="d-flex justify-content-between align-items-center">
                 <h3>Data Pegawai</h3>
                 @if (Auth::user()->hasPermission('employee.create'))
-                    <a href="{{ route('employees.create') }}" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Data Baru
+                <div class="d-flex gap-2">
+                    <a href="{{ route('employees.export-excel') }}" class="btn btn-success">
+                        <i class="fas fa-file-excel"></i> Export Excel
                     </a>
+                    <a href="{{ route('employees.export-pdf') }}" class="btn btn-danger" target="_blank">
+                        <i class="fas fa-file-pdf"></i> Export PDF
+                    </a>
+                    <a href="{{ route('employees.create') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Tambah Pegawai
+                    </a>
+                </div>
                 @endif
             </div>
         </div>
