@@ -91,7 +91,7 @@ Mendukung operasi penuh untuk integrasi:
 ## Dokumentasi Pengujian
 
 Dokumentasi pengujian aplikasi telah disusun secara detail dan dapat diakses pada file:
-👉 **[TEST_REPORT_EMPLOYEE_FORM.md](./TEST_REPORT_EMPLOYEE_FORM.md)**
+👉 **[DOKUMENTASI_PENGUJIAN.md](./DOKUMENTASI_PENGUJIAN.md)**
 
 Pengujian mencakup:
 - Validasi input form (NIP, Password, Lokasi)
